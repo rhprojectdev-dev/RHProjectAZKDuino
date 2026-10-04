@@ -432,9 +432,29 @@ footer{color:#695478}
 
 
 <style id="midi-picker-fix">
-.midi-picker{display:inline-flex;align-items:center;justify-content:center;margin-top:14px;padding:12px 20px;min-height:44px;box-sizing:border-box;border-radius:8px;border:1px solid #b43cf0;background:linear-gradient(135deg,#5b1390,#9b25dd);color:#fff;font-size:.75rem;font-weight:900;letter-spacing:.4px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 7px 22px rgba(123,25,190,.25)}
+.midi-picker{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:14px;
+  padding:12px 20px;
+  min-height:44px;
+  box-sizing:border-box;
+  border-radius:8px;
+  border:1px solid #b43cf0;
+  background:linear-gradient(135deg,#5b1390,#9b25dd);
+  color:#fff;
+  font-size:.75rem;
+  font-weight:900;
+  letter-spacing:.4px;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 7px 22px rgba(123,25,190,.25);
+}
 .midi-picker:active{transform:scale(.98);filter:brightness(1.12)}
 </style>
+
 </head>
 <body>
 <div class="app">
@@ -518,7 +538,7 @@ footer{color:#695478}
         <div class="drop" id="drop">
           <div class="drop-icon">♫</div>
           <div class="meter" id="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="big" id="dropText">Taro file .mid disini, atau pilih file MIDI (MAX 500)</div>
+          <div class="big" id="dropText">Taro file .mid disini, atau pilih file MIDI</div>
           <div class="small" id="dropFile">belum ada file dipilih</div>
           <label class="midi-picker" for="fileInput">📁 PILIH FILE MIDI</label>
           <input type="file" id="fileInput" accept=".mid,.midi,audio/midi,audio/x-midi" multiple>
@@ -1074,5 +1094,434 @@ ${modules}
       if(ctx.state!=="running")await ctx.resume();
       if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browser");
     }catch(e){
-      alert("Audio preview 
-Preview truncated for large file
+      alert("Audio preview gagal dibuka: "+e.message);
+      return;
+    }
+
+    buildFxChain(ctx);
+    updateFxChain();
+
+    const clean=notes
+      .map(n=>({
+        t:Number(n.t),
+        pitch:Number(n.pitch),
+        dur:Math.max(.035,Number(n.dur)||.035),
+        vel:Number(n.vel)||100
+      }))
+      .filter(n=>Number.isFinite(n.t)&&Number.isFinite(n.pitch)&&n.t>=0&&n.t<900);
+
+    if(!clean.length)return;
+
+    const run=previewRun;
+    const startAt=ctx.currentTime+.08;
+    startPianoRoll(clean,startAt);
+    const lookAhead=.20;
+    const every=.06;
+    let index=0;
+
+    const schedule=()=>{
+      if(run!==previewRun)return;
+
+      const horizon=ctx.currentTime+lookAhead;
+
+      while(index<clean.length && startAt+clean[index].t<horizon){
+        const n=clean[index++];
+        const a=startAt+n.t;
+        const b=a+n.dur;
+        activePreview.push(...makeVoice(ctx,midiHz(n.pitch),a,b,selectedWave,n.vel));
+      }
+
+      if(index<clean.length){
+        previewTimer=setTimeout(schedule,every*1000);
+      }else{
+        const last=clean[clean.length-1].t+clean[clean.length-1].dur;
+        previewTimer=setTimeout(()=>{
+          if(run===previewRun&&button){
+            button.classList.remove("previewing");
+            button.textContent="▶ PLAY PREVIEW";
+            delete button.dataset.previewLabel;
+            lastPreviewButton=null;
+            stopPianoRoll();
+          }
+        },Math.max(100,last*1000+350));
+      }
+    };
+
+    if(button){
+      button.classList.add("previewing");
+      button.dataset.previewLabel="1";
+      button.textContent="■ STOP PREVIEW";
+      lastPreviewButton=button;
+    }
+    lastPreviewNotes=clean;
+    schedule();
+  }
+
+  async function previewItem(item,button){
+    if(!item||!Array.isArray(item.noteData)||!item.noteData.length){
+      alert("Data lama ini belum menyimpan note MIDI. Convert ulang file MIDI-nya agar preview tersedia.");
+      return;
+    }
+    if(button.classList.contains("previewing")){stopPreview();return;}
+    setPianoNotes(item.noteData);
+    await playNotes(item.noteData,button);
+  }
+
+  function bindFxControl(id,key,unit=""){
+    const el=$(id), val=$(id+"Val");
+    if(!el||!val)return;
+    el.addEventListener("input",()=>{
+      fx[key]=Number(el.value);
+      val.textContent=el.value+unit;
+      updateFxChain();
+    });
+  }
+
+  bindFxControl("fxStrength","strength");
+  bindFxControl("fxTimbre","timbre");
+  bindFxControl("fxFocus","focus","%");
+  bindFxControl("fxDelay","delay","%");
+  bindFxControl("fxPan","pan","%");
+  bindFxControl("fxVolume","volume","%");
+
+  bindFxControl("rv1Decay","rv1Decay");
+  bindFxControl("rv1Damp","rv1Damp");
+  bindFxControl("rv1Mix","rv1Mix");
+  bindFxControl("rv1Early","rv1Early");
+  bindFxControl("rv1Room","rv1Room");
+
+  bindFxControl("rv2Decay","rv2Decay");
+  bindFxControl("rv2Damp","rv2Damp");
+  bindFxControl("rv2Mix","rv2Mix");
+  bindFxControl("rv2Early","rv2Early");
+  bindFxControl("rv2Room","rv2Room");
+
+
+  // =============================================
+  // PIANO ROLL / NOTE VISUALIZER
+  // =============================================
+  const pianoCanvas=$("pianoCanvas");
+  const pianoWrap=pianoCanvas ? pianoCanvas.parentElement : null;
+  const pianoEmpty=$("pianoEmpty");
+  const pianoStatus=$("pianoStatus");
+  let pianoRAF=0;
+
+  function resizePiano(){
+    if(!pianoCanvas||!pianoWrap)return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const w=pianoWrap.clientWidth, h=pianoWrap.clientHeight;
+    pianoCanvas.width=Math.max(1,Math.floor(w*dpr));
+    pianoCanvas.height=Math.max(1,Math.floor(h*dpr));
+    pianoCanvas.style.width=w+"px"; pianoCanvas.style.height=h+"px";
+    const ctx=pianoCanvas.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawPianoRoll();
+  }
+
+  function setPianoNotes(notes){
+    previewNotes=Array.isArray(notes)?notes:[];
+    lastPreviewNotes=previewNotes;
+    if(pianoEmpty)pianoEmpty.style.display=previewNotes.length?"none":"flex";
+    if(pianoStatus)pianoStatus.textContent="Piano Roll • "+previewNotes.length+" notes";
+    drawPianoRoll();
+  }
+
+  function stopPianoRoll(){
+    if(pianoRAF)cancelAnimationFrame(pianoRAF);
+    pianoRAF=0;
+    if(pianoWrap)pianoWrap.classList.remove("piano-playing");
+    drawPianoRoll();
+  }
+
+  function drawPianoRoll(playheadTime=null){
+    if(!pianoCanvas||!pianoWrap)return;
+    const ctx=pianoCanvas.getContext("2d");
+    const w=pianoWrap.clientWidth,h=pianoWrap.clientHeight;
+    if(!w||!h)return;
+    ctx.clearRect(0,0,w,h);
+
+    ctx.fillStyle="#08050f";ctx.fillRect(0,0,w,h);
+    if(!previewNotes.length)return;
+
+    let minP=Infinity,maxP=-Infinity,maxT=0;
+    for(const n of previewNotes){
+      minP=Math.min(minP,n.pitch);maxP=Math.max(maxP,n.pitch);
+      maxT=Math.max(maxT,n.t+n.dur);
+    }
+    const padP=3;
+    minP-=padP; maxP+=padP;
+    const rows=Math.max(12,maxP-minP+1);
+    const rowH=Math.max(5,h/rows);
+    const viewStart=playheadTime==null?0:Math.max(0,playheadTime-1.0);
+    const viewSeconds=Math.max(6,Math.min(14,maxT-viewStart+1));
+    const pxPerSec=w/viewSeconds;
+
+    // horizontal pitch grid
+    for(let p=Math.floor(minP);p<=Math.ceil(maxP);p++){
+      const y=h-(p-minP+1)*rowH;
+      const black=[1,3,6,8,10].includes(p%12);
+      ctx.fillStyle=black?"#0b0714":"#10091a";
+      ctx.fillRect(0,y,w,rowH);
+      ctx.strokeStyle=black?"#171021":"#21142b";
+      ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(w,y+.5);ctx.stroke();
+    }
+
+    // vertical time grid
+    const step=viewSeconds>10?1:.5;
+    const first=Math.floor(viewStart/step)*step;
+    ctx.font="10px Arial";
+    for(let t=first;t<viewStart+viewSeconds;t+=step){
+      const x=(t-viewStart)*pxPerSec;
+      ctx.strokeStyle="#291638";ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
+      ctx.fillStyle="#704f7c";ctx.fillText(t.toFixed(step<1?1:0)+"s",x+3,12);
+    }
+
+    // note bars
+    for(const n of previewNotes){
+      const x=(n.t-viewStart)*pxPerSec;
+      const width=Math.max(3,n.dur*pxPerSec);
+      const y=h-(n.pitch-minP+1)*rowH+1;
+      if(x+width<0||x>w)continue;
+      const active=playheadTime!=null && playheadTime>=n.t && playheadTime<n.t+n.dur;
+      ctx.fillStyle=active?"#ffb6f6":"#a84ee0";
+      ctx.fillRect(Math.max(0,x),y,Math.min(width,w-Math.max(0,x)),Math.max(3,rowH-2));
+      ctx.fillStyle=active?"#fff":"#e7a9ff";
+      if(width>16)ctx.fillRect(Math.max(0,x),y,Math.min(3,width),Math.max(3,rowH-2));
+    }
+
+    if(playheadTime!=null){
+      const px=(playheadTime-viewStart)*pxPerSec;
+      ctx.strokeStyle="#ff78e9";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,h);ctx.stroke();
+    }
+  }
+
+  function animatePianoRoll(){
+    if(!audioCtx||!previewStartTime||!previewNotes.length)return;
+    const t=Math.max(0,audioCtx.currentTime-previewStartTime);
+    const total=previewNotes.length?previewNotes[previewNotes.length-1].t+previewNotes[previewNotes.length-1].dur:0;
+    if(t<=total+.35){
+      drawPianoRoll(t);
+      pianoRAF=requestAnimationFrame(animatePianoRoll);
+    }else{
+      stopPianoRoll();
+    }
+  }
+
+  function startPianoRoll(notes,startTime){
+    setPianoNotes(notes);
+    previewStartTime=startTime;
+    if(pianoWrap)pianoWrap.classList.add("piano-playing");
+    if(pianoRAF)cancelAnimationFrame(pianoRAF);
+    pianoRAF=requestAnimationFrame(animatePianoRoll);
+  }
+
+
+  // Keyboard shortcut: Space = play/stop preview (desktop/laptop).
+  document.addEventListener("keydown",async e=>{
+    if(e.code!=="Space" || e.repeat)return;
+    const tag=(document.activeElement||{}).tagName;
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||document.activeElement?.isContentEditable)return;
+    e.preventDefault();
+    const b=lastPreviewButton||$("btnPreviewCurrent");
+    if(b && b.classList.contains("previewing")){stopPreview();return;}
+    const notes=lastPreviewNotes.length?lastPreviewNotes:(window._currentNotes||[]);
+    if(notes.length){
+      await playNotes(notes,b);
+    }
+  });
+
+  window.addEventListener("resize",resizePiano);
+  setTimeout(resizePiano,0);
+
+  function renderHistory(){
+    historyBody.innerHTML = "";
+    emptyHistory.classList.toggle("hidden", history.length > 0);
+    historyCount.textContent = history.length + " / 500 data";
+
+    history.forEach((item, index)=>{
+      const tr = document.createElement("tr");
+      const date = item.date ? new Date(item.date).toLocaleString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "-";
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><div class="song">${escapeHtml(item.name)}</div><div class="sub">${escapeHtml(item.fileName || "MIDI")} • ${date}</div></td>
+        <td>${item.notes} note • ${item.duration}s • pitch ${item.range}</td>
+        <td><span class="tag">TERKONVERSI</span></td>
+        <td><div class="actions">
+          <button class="btn primary" data-download="${item.id}">DOWNLOAD RBXM</button>
+          <button class="btn" data-lua="${item.id}">LUA</button>
+          <button class="btn" data-preview="${item.id}">▶ PLAY PREVIEW</button>
+        </div></td>`;
+      historyBody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showCurrent(item){
+    currentSongName = item.name;
+    currentLua = item.lua;
+    songNameInput.value = item.name;
+    outArea.value = item.lua;
+    previewName.textContent = item.name;
+    previewSection.classList.remove("hidden");
+  }
+
+  function midiName(file){
+    return file.name.replace(/\.(mid|midi)$/i,"").toUpperCase().replace(/[^A-Z0-9_]+/g,"_").replace(/^_+|_+$/g,"")||"LAGU";
+  }
+  function readFileArrayBuffer(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=e=>resolve(new Uint8Array(e.target.result));r.onerror=()=>reject(new Error("Gagal membaca file"));r.readAsArrayBuffer(file);});}
+  async function convertFile(file){
+    const notes=extractNotes(await readFileArrayBuffer(file)); if(!notes.length)throw new Error("tidak ada note MIDI");
+    const pitches=notes.map(n=>n.pitch), minP=Math.min(...pitches), maxP=Math.max(...pitches), uniqueP=new Set(pitches).size;
+    const durTotal=notes[notes.length-1].t+notes[notes.length-1].dur, name=midiName(file);
+    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),name,fileName:file.name,notes:notes.length,duration:durTotal.toFixed(1),range:minP+"-"+maxP,unique:uniqueP,noteData:notes,lua:buildLua(notes,name),date:new Date().toISOString()};
+  }
+  function showConverted(item){
+    currentSongName=item.name; currentLua=item.lua; window._currentNotes=item.noteData||[]; currentStats={notes:item.notes,duration:item.duration,range:item.range,unique:item.unique};
+    songNameInput.value=item.name; outArea.value=item.lua; previewName.textContent=item.name;
+    statNotes.textContent=item.notes; statDur.textContent=item.duration+"s"; statRange.textContent=item.range; statUnique.textContent=item.unique;
+    stats.classList.remove("hidden"); editor.classList.remove("hidden"); previewSection.classList.remove("hidden");
+    setPianoNotes(item.noteData||[]);
+  }
+  async function handleFiles(fileList){
+    const incoming=Array.from(fileList||[]);
+    const files=incoming.filter(f=>/\.(mid|midi)$/i.test(f.name));
+    if(!files.length){
+      alert("File bukan MIDI. Pilih file dengan ekstensi .mid atau .midi.");
+      return;
+    }
+    const available=Math.max(0,500-history.length); if(!available){alert("Data sudah mencapai maksimal 500 file. Hapus sebagian data dulu.");return;}
+    const selected=files.slice(0,available); meter.classList.add("active"); dropText.textContent="Memproses "+selected.length+" file MIDI...";
+    let ok=0,failed=[];
+    for(const file of selected){try{const item=await convertFile(file);history.unshift(item);ok++;showConverted(item);dropFile.textContent=ok+" / "+selected.length+" selesai • "+file.name;}catch(e){failed.push(file.name+": "+e.message);}}
+    history=history.slice(0,500); saveHistory(); renderHistory(); meter.classList.remove("active");
+    dropText.textContent=ok+" file berhasil dikonversi. Pilih file MIDI lain untuk menambah data.";
+    if(failed.length)alert("Beberapa file gagal:\n\n"+failed.join("\n"));
+    if(ok)document.getElementById("historySection").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  // Native <label for="fileInput"> opens the system file picker reliably
+  // on Android/iOS/desktop. The JS change handler only processes the files.
+  fileInput.addEventListener("change", async e=>{
+    const files = e.target.files;
+    if(!files || !files.length) return;
+    try{
+      await handleFiles(files);
+    }catch(err){
+      console.error(err);
+      alert("Gagal membaca MIDI: " + (err && err.message ? err.message : err));
+    }finally{
+      // Allows selecting the same file again.
+      fileInput.value = "";
+    }
+  });
+
+  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.add("drag");
+  }));
+  ["dragleave"].forEach(evt=>drop.addEventListener(evt,e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.remove("drag");
+  }));
+  drop.addEventListener("drop",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.remove("drag");
+    if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+      handleFiles(e.dataTransfer.files).catch(err=>{
+        console.error(err);
+        alert("Gagal membaca MIDI: " + (err && err.message ? err.message : err));
+      });
+    }
+  });
+
+  songNameInput.addEventListener("input",()=>{
+    currentSongName = songNameInput.value.trim() || "LAGU";
+    previewName.textContent = currentSongName;
+    if(currentLua){
+      const lines=currentLua.split("\n");
+      lines[1]="-- "+currentSongName+" - hasil convert MIDI (RHProject)";
+      currentLua=lines.join("\n");
+      outArea.value=currentLua;
+    }
+  });
+
+  document.getElementById("btnAddData").addEventListener("click",()=>{
+    if(!currentLua) return;
+    const item={
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+      name:currentSongName || "LAGU",
+      fileName:dropFile.textContent,
+      notes:currentStats.notes,
+      duration:currentStats.duration,
+      range:currentStats.range,
+      unique:currentStats.unique,
+      noteData:window._currentNotes || [],
+      lua:currentLua,
+      date:new Date().toISOString()
+    };
+    history.unshift(item);
+    history=history.slice(0,500);
+    saveHistory();
+    renderHistory();
+    showCurrent(item);
+    document.getElementById("historySection").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
+  document.getElementById("btnDownload").addEventListener("click",()=>downloadRBXM(currentSongName,currentLua));
+  document.getElementById("btnDownloadLua").addEventListener("click",()=>downloadBlob(currentLua,(currentSongName||"LAGU")+".lua","text/plain;charset=utf-8"));
+  document.getElementById("btnPreviewCurrent").addEventListener("click",async()=>{
+    const b=document.getElementById("btnPreviewCurrent");
+    if(b.classList.contains("previewing")){stopPreview();return;}
+    if(!window._currentNotes||!window._currentNotes.length){alert("Belum ada MIDI yang dikonversi.");return;}
+    await playNotes(window._currentNotes,b);
+  });
+  document.getElementById("btnCopy").addEventListener("click",()=>{
+    if(!currentLua)return;
+    navigator.clipboard.writeText(currentLua).then(()=>{
+      const b=document.getElementById("btnCopy"), old=b.textContent;b.textContent="COPIED!";
+      setTimeout(()=>b.textContent=old,1200);
+    });
+  });
+
+  historyBody.addEventListener("click",e=>{
+    const r=e.target.closest("button"); if(!r)return;
+    const id=r.dataset.download || r.dataset.lua || r.dataset.preview;
+    const item=history.find(x=>x.id===id); if(!item)return;
+    if(r.dataset.download) downloadRBXM(item.name,item.lua);
+    else if(r.dataset.lua) downloadBlob(item.lua,item.name+".lua","text/plain;charset=utf-8");
+    else if(r.dataset.preview) previewItem(item,r);
+  });
+
+  document.getElementById("btnDownloadAll").addEventListener("click",()=>{
+    if(!history.length){alert("Belum ada data convert.");return;}
+    downloadBlob(makeAllRBXM(history),"RHProject_All_MIDI_Data.rbxm","application/octet-stream");
+  });
+
+  document.querySelectorAll(".sound-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      document.querySelectorAll(".sound-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active"); selectedWave=btn.dataset.wave;
+    });
+  });
+
+  document.getElementById("btnClear").addEventListener("click",()=>{
+    if(!history.length)return;
+    if(confirm("Hapus semua data convert yang tersimpan di browser ini?")){
+      history=[];saveHistory();renderHistory();previewSection.classList.add("hidden");
+    }
+  });
+
+  document.getElementById("navHistory").addEventListener("click",()=>document.getElementById("historySection").scrollIntoView({behavior:"smooth"}));
+  document.getElementById("navInfo").addEventListener("click",()=>alert("RHProject MIDI Converter\\n\\nMIDI diproses langsung di browser. Hasil RBXM berisi Model > ModuleScript > Source hasil convert."));
+
+  renderHistory();
+})();
+</script>
+</body>
+</html>
