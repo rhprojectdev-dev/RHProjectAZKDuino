@@ -59,6 +59,23 @@
   .sound-btn,.sound-stop{border:1px solid #4b2529;background:#1b0c0e;color:#cdbabd;border-radius:5px;padding:8px 5px;font-size:.58rem;font-weight:900}
   .sound-btn:hover,.sound-btn.active{background:#68141b;border-color:#a92933;color:#fff}
   .sound-stop{width:100%;margin-top:7px;color:#e9cdd0}.sound-stop:hover{background:#3b1115}
+  .fx-title{margin-top:12px;padding-top:9px;border-top:1px solid #4c2170;color:#e6c9ff;font-size:.58rem;font-weight:900;letter-spacing:1px}
+  .fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+  .fx-control{display:block;margin:0;text-transform:none;letter-spacing:0;color:#a98bbd;font-size:.54rem}
+  .fx-control span{display:flex;justify-content:space-between;gap:4px;margin-bottom:3px}
+  .fx-control b{color:#f18cff;font-size:.55rem}
+  .fx-control input[type=range]{width:100%;height:15px;margin:0;padding:0;accent-color:#ed78dc;background:transparent}
+  .fx-control input[type=range]::-webkit-slider-runnable-track{height:4px;background:#3b1b50;border-radius:99px}
+  .fx-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-4px;border-radius:50%;background:#ef78dc;border:1px solid #ffd1f6;box-shadow:0 0 8px #ed78dc88}
+  .fx-control input[type=range]::-moz-range-track{height:4px;background:#3b1b50;border-radius:99px}
+  .fx-control input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#ef78dc;border:1px solid #ffd1f6}
+  .volume-control{grid-column:1/-1}
+  .piano-section{overflow:hidden}
+  .piano-wrap{position:relative;height:250px;background:#08050f;border:1px solid #3d1b52;border-radius:8px;overflow:hidden}
+  #pianoCanvas{display:block;width:100%;height:100%}
+  .piano-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#765b80;font-size:.72rem;pointer-events:none}
+  .piano-playing{box-shadow:0 0 0 1px #e76bea55,0 0 22px #8b39b844}
+  .piano-section .section-title small{color:#9e72ad}
   .previewing{animation:previewPulse 1s ease-in-out infinite}
   @keyframes previewPulse{50%{box-shadow:0 0 0 3px rgba(213,42,53,.12)}}
   .main{padding:24px;min-width:0;background:radial-gradient(circle at 90% 0,#241012 0,#100708 36%,#0e0708 70%)}
@@ -451,7 +468,32 @@ footer{color:#695478}
           <button class="sound-btn" data-wave="triangle">TRIANGLE</button>
           <button class="sound-btn" data-wave="sawtooth">SAW</button>
         </div>
-        <button class="sound-stop" id="btnStopPreview">■ STOP PREVIEW</button>
+        <div class="fx-title">STEREOIZER</div>
+        <div class="fx-grid">
+          <label class="fx-control"><span>Strength <b id="fxStrengthVal">70</b></span><input id="fxStrength" type="range" min="0" max="100" value="70"></label>
+          <label class="fx-control"><span>Timbre <b id="fxTimbreVal">90</b></span><input id="fxTimbre" type="range" min="0" max="100" value="90"></label>
+          <label class="fx-control"><span>Focus <b id="fxFocusVal">90%</b></span><input id="fxFocus" type="range" min="0" max="100" value="90"></label>
+          <label class="fx-control"><span>L/R Delay <b id="fxDelayVal">90%</b></span><input id="fxDelay" type="range" min="0" max="100" value="90"></label>
+          <label class="fx-control"><span>Pan <b id="fxPanVal">0%</b></span><input id="fxPan" type="range" min="-100" max="100" value="0"></label>
+        </div>
+        <div class="fx-title">REVERB 1</div>
+        <div class="fx-grid">
+          <label class="fx-control"><span>Decay <b id="rv1DecayVal">0</b></span><input id="rv1Decay" type="range" min="0" max="100" value="0"></label>
+          <label class="fx-control"><span>High Damp <b id="rv1DampVal">40</b></span><input id="rv1Damp" type="range" min="0" max="100" value="40"></label>
+          <label class="fx-control"><span>Mix <b id="rv1MixVal">10</b></span><input id="rv1Mix" type="range" min="0" max="100" value="10"></label>
+          <label class="fx-control"><span>Early Ref. <b id="rv1EarlyVal">20</b></span><input id="rv1Early" type="range" min="0" max="100" value="20"></label>
+          <label class="fx-control"><span>Room Size <b id="rv1RoomVal">97</b></span><input id="rv1Room" type="range" min="0" max="100" value="97"></label>
+        </div>
+        <div class="fx-title">REVERB 2</div>
+        <div class="fx-grid">
+          <label class="fx-control"><span>Decay <b id="rv2DecayVal">20</b></span><input id="rv2Decay" type="range" min="0" max="100" value="20"></label>
+          <label class="fx-control"><span>High Damp <b id="rv2DampVal">40</b></span><input id="rv2Damp" type="range" min="0" max="100" value="40"></label>
+          <label class="fx-control"><span>Mix <b id="rv2MixVal">40</b></span><input id="rv2Mix" type="range" min="0" max="100" value="40"></label>
+          <label class="fx-control"><span>Early Ref. <b id="rv2EarlyVal">40</b></span><input id="rv2Early" type="range" min="0" max="100" value="40"></label>
+          <label class="fx-control"><span>Room Size <b id="rv2RoomVal">97</b></span><input id="rv2Room" type="range" min="0" max="100" value="97"></label>
+        </div>
+        <div class="fx-title">VOLUME</div>
+        <label class="fx-control volume-control"><span>Master Volume <b id="fxVolumeVal">80%</b></span><input id="fxVolume" type="range" min="0" max="100" value="80"></label>
       </div>
     </aside>
 
@@ -488,7 +530,7 @@ footer{color:#695478}
             <input type="text" id="songName" placeholder="Contoh: SABILULUNGAN">
           </div>
           <button class="bigbtn" id="btnAddData">＋ SIMPAN KE DATA</button>
-          <button class="ghost" id="btnPreviewCurrent">▶ NADA PREVIEW</button>
+          <button class="ghost" id="btnPreviewCurrent">▶ PLAY PREVIEW</button>
         </div>
       </section>
 
@@ -506,6 +548,17 @@ footer{color:#695478}
           <summary>Lihat isi ModuleScript</summary>
           <textarea id="outArea" readonly spellcheck="false"></textarea>
         </details>
+      </section>
+
+      <section class="section piano-section" id="pianoSection">
+        <div class="section-title">
+          <h2>NOTES PREVIEW</h2>
+          <small id="pianoStatus">Piano Roll • 0 notes</small>
+        </div>
+        <div class="piano-wrap">
+          <canvas id="pianoCanvas"></canvas>
+          <div class="piano-empty" id="pianoEmpty">Convert MIDI untuk menampilkan garis-garis not di sini.</div>
+        </div>
       </section>
 
       <section class="section" id="historySection">
@@ -815,207 +868,233 @@ ${modules}
   // Memainkan NOTE MIDI hasil parser secara langsung.
   // =============================================
   let audioCtx=null, activePreview=[], selectedWave="supersaw";
+  let previewTimer=null, previewRun=0, fxNodes=null;
+  let previewStartTime=0, previewNotes=[], previewAnim=0, lastPreviewButton=null, lastPreviewNotes=[];
+
+  const fx={
+    strength:70,timbre:90,focus:90,delay:90,pan:0,
+    rv1Decay:0,rv1Damp:40,rv1Mix:10,rv1Early:20,rv1Room:97,
+    rv2Decay:20,rv2Damp:40,rv2Mix:40,rv2Early:40,rv2Room:97,
+    volume:80
+  };
+
+  const $=id=>document.getElementById(id);
 
   function getAudioContext(){
     if(!audioCtx){
       const Ctx=window.AudioContext||window.webkitAudioContext;
       if(!Ctx) throw new Error("Browser ini tidak mendukung Web Audio");
-      audioCtx=new Ctx();
+      audioCtx=new Ctx({latencyHint:"interactive"});
     }
     return audioCtx;
   }
+
   function stopPreview(){
-    activePreview.forEach(n=>{try{n.stop()}catch(e){} try{n.disconnect()}catch(e){}});
+    previewRun++;
+    if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
+    activePreview.forEach(n=>{
+      try{if(n.stop)n.stop();}catch(e){}
+      try{if(n.disconnect)n.disconnect();}catch(e){}
+    });
     activePreview=[];
-    document.querySelectorAll("[data-preview]").forEach(b=>b.classList.remove("previewing"));
-    const b=document.getElementById("btnPreviewCurrent"); if(b)b.classList.remove("previewing");
+    document.querySelectorAll("[data-preview],#btnPreviewCurrent").forEach(b=>{
+      b.classList.remove("previewing");
+      if(b.dataset && b.dataset.previewLabel)b.textContent="PLAY PREVIEW";
+    });
+    const b=$("btnPreviewCurrent");
+    if(b)b.textContent="▶ PLAY PREVIEW";
+    lastPreviewButton=null;
+    stopPianoRoll();
   }
+
   function midiHz(p){return 440*Math.pow(2,(Number(p)-69)/12)}
-  function makeVoice(ctx,freq,start,end,wave){
-    const master=ctx.createGain(); master.connect(ctx.destination);
-    const peak=wave==="supersaw"?.022:.045;
+
+  function makeImpulse(ctx,seconds,room,damp){
+    const rate=ctx.sampleRate;
+    const len=Math.max(1,Math.floor(rate*seconds));
+    const buf=ctx.createBuffer(2,len,rate);
+    const roomAmt=Math.max(.12,room/100);
+    const dampAmt=Math.max(.02,1-damp/100);
+    for(let ch=0;ch<2;ch++){
+      const d=buf.getChannelData(ch);
+      for(let i=0;i<len;i++){
+        const t=i/len;
+        d[i]=(Math.random()*2-1)*Math.pow(1-t,1.2+roomAmt*2)*dampAmt;
+      }
+    }
+    return buf;
+  }
+
+  function buildFxChain(ctx){
+    if(fxNodes)return fxNodes;
+
+    const input=ctx.createGain();
+    const dry=ctx.createGain();
+    const tone=ctx.createBiquadFilter();
+    const stereo=ctx.createStereoPanner();
+    const splitter=ctx.createChannelSplitter(2);
+    const merger=ctx.createChannelMerger(2);
+    const lDelay=ctx.createDelay(.05), rDelay=ctx.createDelay(.05);
+    const lGain=ctx.createGain(), rGain=ctx.createGain();
+    const rv1=ctx.createConvolver(), rv1Out=ctx.createGain();
+    const rv2=ctx.createConvolver(), rv2Out=ctx.createGain();
+    const wet1=ctx.createGain(), wet2=ctx.createGain();
+    const out=ctx.createGain();
+
+    tone.type="lowpass";
+
+    input.connect(dry);
+    dry.connect(out);
+
+    input.connect(tone);
+    tone.connect(stereo);
+    stereo.connect(splitter);
+
+    splitter.connect(lDelay,0);
+    splitter.connect(rDelay,1);
+    lDelay.connect(lGain);
+    rDelay.connect(rGain);
+    lGain.connect(merger,0,0);
+    rGain.connect(merger,0,1);
+
+    merger.connect(wet1);
+    wet1.connect(rv1);
+    rv1.connect(rv1Out);
+
+    rv1Out.connect(wet2);
+    wet2.connect(rv2);
+    rv2.connect(rv2Out);
+
+    rv2Out.connect(out);
+    out.connect(ctx.destination);
+
+    fxNodes={input,dry,tone,stereo,splitter,merger,lDelay,rDelay,lGain,rGain,rv1,rv1Out,rv2,rv2Out,wet1,wet2,out};
+    updateFxChain();
+    return fxNodes;
+  }
+
+  function updateFxChain(){
+    if(!audioCtx||!fxNodes)return;
+    const n=fxNodes, now=audioCtx.currentTime, strength=fx.strength/100;
+
+    n.dry.gain.setTargetAtTime(Math.max(.12,1-strength*.5),now,.015);
+    n.wet1.gain.setTargetAtTime((fx.rv1Mix/100)*.75,now,.015);
+    n.wet2.gain.setTargetAtTime((fx.rv2Mix/100)*.75,now,.015);
+
+    n.stereo.pan.setTargetAtTime(fx.pan/100,now,.015);
+
+    const d=(fx.delay/100);
+    n.lDelay.delayTime.setTargetAtTime(.001+d*.026,now,.015);
+    n.rDelay.delayTime.setTargetAtTime(.001+d*.018,now,.015);
+
+    n.lGain.gain.setTargetAtTime(.65+strength*.5,now,.015);
+    n.rGain.gain.setTargetAtTime(.65+strength*.5,now,.015);
+
+    n.tone.frequency.setTargetAtTime(900+fx.timbre*125,now,.015);
+    n.tone.Q.setTargetAtTime(.45+fx.focus/100*1.6,now,.015);
+
+    n.rv1.buffer=makeImpulse(audioCtx,.22+(fx.rv1Decay/100)*1.5,fx.rv1Room,fx.rv1Damp);
+    n.rv2.buffer=makeImpulse(audioCtx,.35+(fx.rv2Decay/100)*2.8,fx.rv2Room,fx.rv2Damp);
+
+    n.rv1Out.gain.setTargetAtTime(.7+(fx.rv1Early/100)*.5,now,.015);
+    n.rv2Out.gain.setTargetAtTime(.7+(fx.rv2Early/100)*.6,now,.015);
+  }
+
+  function makeVoice(ctx,freq,start,end,wave,velocity){
+    const chain=buildFxChain(ctx);
+    const master=ctx.createGain();
+    const pianoFilter=ctx.createBiquadFilter();
+    const body=ctx.createGain();
+    const attack=Math.min(.035,Math.max(.008,(end-start)*.08));
+    const release=Math.min(.22,Math.max(.07,(end-start)*.22));
+    const sustainStart=Math.min(end-release,start+attack);
+    const vel=Math.pow(Math.max(.05,Math.min(1,(velocity||100)/127)),0.72);
+    const vol=(.048+.052*vel)*(fx.volume/100);
+
+    master.connect(pianoFilter);
+    pianoFilter.connect(body);
+    body.connect(chain.input);
+
+    pianoFilter.type="lowpass";
+    const cutoff=wave==="supersaw"?Math.min(5200,1700+fx.timbre*32):Math.min(7000,2400+fx.timbre*40);
+    pianoFilter.frequency.setValueAtTime(cutoff,start);
+    pianoFilter.Q.setValueAtTime(.65+fx.focus/120,start);
+
     master.gain.setValueAtTime(.0001,start);
-    const nodes=[];
-    const detunes=wave==="supersaw"?[-9,-4.5,0,4.5,9]:[0];
-    detunes.forEach(det=>{
-      const o=ctx.createOscillator(), g=ctx.createGain();
-      o.type=wave==="supersaw"?"sawtooth":wave; o.frequency.value=freq; o.detune.value=det;
-      g.gain.value=1/detunes.length; o.connect(g); g.connect(master);
-      o.start(start); o.stop(end); nodes.push(o,g);
-    });
-    const attack=Math.min(.018,Math.max(.004,(end-start)*.08));
-    const release=Math.min(.10,Math.max(.025,(end-start)*.2));
-    master.gain.exponentialRampToValueAtTime(peak,start+attack);
-    master.gain.setValueAtTime(peak,Math.max(start+attack,end-release));
+    master.gain.exponentialRampToValueAtTime(vol,start+attack);
+    master.gain.exponentialRampToValueAtTime(Math.max(.0001,vol*.68),sustainStart);
+    master.gain.setValueAtTime(Math.max(.0001,vol*.68),sustainStart);
     master.gain.exponentialRampToValueAtTime(.0001,end);
-    return nodes.concat(master);
+
+    const nodes=[];
+    const detunes=wave==="supersaw"?[-10,-5,0,5,10]:[0];
+
+    detunes.forEach((det,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.type=wave==="supersaw"?"sawtooth":wave;
+      o.frequency.setValueAtTime(freq,start);
+      o.detune.setValueAtTime(det,start);
+      g.gain.value=(wave==="supersaw"?0.25:0.82)/detunes.length;
+      o.connect(g); g.connect(master);
+      o.start(start); o.stop(end+.035);
+      nodes.push(o,g);
+    });
+
+    // A quiet sine fundamental makes the attack/decay feel more like a piano
+    // while preserving the selected synth waveform.
+    const fundamental=ctx.createOscillator();
+    const fg=ctx.createGain();
+    fundamental.type="sine";
+    fundamental.frequency.setValueAtTime(freq,start);
+    fg.gain.value=.14;
+    fundamental.connect(fg); fg.connect(master);
+    fundamental.start(start); fundamental.stop(end+.035);
+    nodes.push(fundamental,fg,master,pianoFilter,body);
+    return nodes;
   }
+
   async function playNotes(notes,button){
-    if(!Array.isArray(notes)||!notes.length){alert("Belum ada note MIDI yang bisa dipreview.");return;}
+    if(!Array.isArray(notes)||!notes.length){
+      alert("Belum ada note MIDI yang bisa dipreview.");
+      return;
+    }
+
     stopPreview();
-    let ctx; try{ctx=getAudioContext(); if(ctx.state!=="running") await ctx.resume();}
-    catch(e){alert("Audio preview gagal dibuka: "+e.message);return;}
-    const limit=Math.min(notes.length,6000), base=ctx.currentTime+.08; let maxEnd=0;
-    for(let i=0;i<limit;i++){
-      const n=notes[i], st=Number(n.t), dur=Math.max(.045,Number(n.dur)||.045);
-      if(!Number.isFinite(st)||!Number.isFinite(dur)||st>600) continue;
-      const a=base+Math.max(0,st), b=a+dur; maxEnd=Math.max(maxEnd,st+dur);
-      activePreview.push(...makeVoice(ctx,midiHz(n.pitch),a,b,selectedWave));
+
+    let ctx;
+    try{
+      ctx=getAudioContext();
+      if(ctx.state!=="running")await ctx.resume();
+      if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browser");
+    }catch(e){
+      alert("Audio preview gagal dibuka: "+e.message);
+      return;
     }
-    if(button)button.classList.add("previewing");
-    setTimeout(()=>{if(button)button.classList.remove("previewing")},Math.min(maxEnd*1000+500,605000));
-  }
-  async function previewItem(item,button){
-    if(!item||!Array.isArray(item.noteData)||!item.noteData.length){alert("Data lama ini belum menyimpan note MIDI. Convert ulang file MIDI-nya agar preview tersedia.");return;}
-    await playNotes(item.noteData,button);
-  }
 
-  function renderHistory(){
-    historyBody.innerHTML = "";
-    emptyHistory.classList.toggle("hidden", history.length > 0);
-    historyCount.textContent = history.length + " / 500 data";
+    buildFxChain(ctx);
+    updateFxChain();
 
-    history.forEach((item, index)=>{
-      const tr = document.createElement("tr");
-      const date = item.date ? new Date(item.date).toLocaleString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "-";
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td><div class="song">${escapeHtml(item.name)}</div><div class="sub">${escapeHtml(item.fileName || "MIDI")} • ${date}</div></td>
-        <td>${item.notes} note • ${item.duration}s • pitch ${item.range}</td>
-        <td><span class="tag">TERKONVERSI</span></td>
-        <td><div class="actions">
-          <button class="btn primary" data-download="${item.id}">DOWNLOAD RBXM</button>
-          <button class="btn" data-lua="${item.id}">LUA</button>
-          <button class="btn" data-preview="${item.id}">NADA PREVIEW</button>
-        </div></td>`;
-      historyBody.appendChild(tr);
-    });
-  }
+    const clean=notes
+      .map(n=>({
+        t:Number(n.t),
+        pitch:Number(n.pitch),
+        dur:Math.max(.035,Number(n.dur)||.035),
+        vel:Number(n.vel)||100
+      }))
+      .filter(n=>Number.isFinite(n.t)&&Number.isFinite(n.pitch)&&n.t>=0&&n.t<900);
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
+    if(!clean.length)return;
 
-  function showCurrent(item){
-    currentSongName = item.name;
-    currentLua = item.lua;
-    songNameInput.value = item.name;
-    outArea.value = item.lua;
-    previewName.textContent = item.name;
-    previewSection.classList.remove("hidden");
-  }
+    const run=previewRun;
+    const startAt=ctx.currentTime+.08;
+    startPianoRoll(clean,startAt);
+    const lookAhead=.20;
+    const every=.06;
+    let index=0;
 
-  function midiName(file){
-    return file.name.replace(/\.(mid|midi)$/i,"").toUpperCase().replace(/[^A-Z0-9_]+/g,"_").replace(/^_+|_+$/g,"")||"LAGU";
-  }
-  function readFileArrayBuffer(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=e=>resolve(new Uint8Array(e.target.result));r.onerror=()=>reject(new Error("Gagal membaca file"));r.readAsArrayBuffer(file);});}
-  async function convertFile(file){
-    const notes=extractNotes(await readFileArrayBuffer(file)); if(!notes.length)throw new Error("tidak ada note MIDI");
-    const pitches=notes.map(n=>n.pitch), minP=Math.min(...pitches), maxP=Math.max(...pitches), uniqueP=new Set(pitches).size;
-    const durTotal=notes[notes.length-1].t+notes[notes.length-1].dur, name=midiName(file);
-    return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),name,fileName:file.name,notes:notes.length,duration:durTotal.toFixed(1),range:minP+"-"+maxP,unique:uniqueP,noteData:notes,lua:buildLua(notes,name),date:new Date().toISOString()};
-  }
-  function showConverted(item){
-    currentSongName=item.name; currentLua=item.lua; window._currentNotes=item.noteData||[]; currentStats={notes:item.notes,duration:item.duration,range:item.range,unique:item.unique};
-    songNameInput.value=item.name; outArea.value=item.lua; previewName.textContent=item.name;
-    statNotes.textContent=item.notes; statDur.textContent=item.duration+"s"; statRange.textContent=item.range; statUnique.textContent=item.unique;
-    stats.classList.remove("hidden"); editor.classList.remove("hidden"); previewSection.classList.remove("hidden");
-  }
-  async function handleFiles(fileList){
-    const files=Array.from(fileList||[]).filter(f=>/\.(mid|midi)$/i.test(f.name)); if(!files.length)return;
-    const available=Math.max(0,500-history.length); if(!available){alert("Data sudah mencapai maksimal 500 file. Hapus sebagian data dulu.");return;}
-    const selected=files.slice(0,available); meter.classList.add("active"); dropText.textContent="Memproses "+selected.length+" file MIDI...";
-    let ok=0,failed=[];
-    for(const file of selected){try{const item=await convertFile(file);history.unshift(item);ok++;showConverted(item);dropFile.textContent=ok+" / "+selected.length+" selesai • "+file.name;}catch(e){failed.push(file.name+": "+e.message);}}
-    history=history.slice(0,500); saveHistory(); renderHistory(); meter.classList.remove("active");
-    dropText.textContent=ok+" file berhasil dikonversi. Taro file lain untuk menambah data.";
-    if(failed.length)alert("Beberapa file gagal:\n\n"+failed.join("\n"));
-    if(ok)document.getElementById("historySection").scrollIntoView({behavior:"smooth",block:"start"});
-  }
-  drop.addEventListener("click",()=>fileInput.click());
-  fileInput.addEventListener("change",e=>{handleFiles(e.target.files);e.target.value=""});
-  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.add("drag")}));
-  ["dragleave","drop"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.remove("drag")}));
-  drop.addEventListener("drop",e=>handleFiles(e.dataTransfer.files));
+    const schedule=()=>{
+      if(run!==previewRun)return;
 
-  songNameInput.addEventListener("input",()=>{
-    currentSongName = songNameInput.value.trim() || "LAGU";
-    previewName.textContent = currentSongName;
-    if(currentLua){
-      const lines=currentLua.split("\n");
-      lines[1]="-- "+currentSongName+" - hasil convert MIDI (RHProject)";
-      currentLua=lines.join("\n");
-      outArea.value=currentLua;
-    }
-  });
-
-  document.getElementById("btnAddData").addEventListener("click",()=>{
-    if(!currentLua) return;
-    const item={
-      id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
-      name:currentSongName || "LAGU",
-      fileName:dropFile.textContent,
-      notes:currentStats.notes,
-      duration:currentStats.duration,
-      range:currentStats.range,
-      unique:currentStats.unique,
-      noteData:window._currentNotes || [],
-      lua:currentLua,
-      date:new Date().toISOString()
-    };
-    history.unshift(item);
-    history=history.slice(0,500);
-    saveHistory();
-    renderHistory();
-    showCurrent(item);
-    document.getElementById("historySection").scrollIntoView({behavior:"smooth",block:"start"});
-  });
-
-  document.getElementById("btnDownload").addEventListener("click",()=>downloadRBXM(currentSongName,currentLua));
-  document.getElementById("btnDownloadLua").addEventListener("click",()=>downloadBlob(currentLua,(currentSongName||"LAGU")+".lua","text/plain;charset=utf-8"));
-  document.getElementById("btnPreviewCurrent").addEventListener("click",()=>playNotes(window._currentNotes||[],document.getElementById("btnPreviewCurrent")));
-  document.getElementById("btnCopy").addEventListener("click",()=>{
-    if(!currentLua)return;
-    navigator.clipboard.writeText(currentLua).then(()=>{
-      const b=document.getElementById("btnCopy"), old=b.textContent;b.textContent="COPIED!";
-      setTimeout(()=>b.textContent=old,1200);
-    });
-  });
-
-  historyBody.addEventListener("click",e=>{
-    const r=e.target.closest("button"); if(!r)return;
-    const id=r.dataset.download || r.dataset.lua || r.dataset.preview;
-    const item=history.find(x=>x.id===id); if(!item)return;
-    if(r.dataset.download) downloadRBXM(item.name,item.lua);
-    else if(r.dataset.lua) downloadBlob(item.lua,item.name+".lua","text/plain;charset=utf-8");
-    else if(r.dataset.preview) previewItem(item,r);
-  });
-
-  document.getElementById("btnDownloadAll").addEventListener("click",()=>{
-    if(!history.length){alert("Belum ada data convert.");return;}
-    downloadBlob(makeAllRBXM(history),"RHProject_All_MIDI_Data.rbxm","application/octet-stream");
-  });
-
-  document.querySelectorAll(".sound-btn").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      document.querySelectorAll(".sound-btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active"); selectedWave=btn.dataset.wave;
-    });
-  });
-  document.getElementById("btnStopPreview").addEventListener("click",stopPreview);
-
-  document.getElementById("btnClear").addEventListener("click",()=>{
-    if(!history.length)return;
-    if(confirm("Hapus semua data convert yang tersimpan di browser ini?")){
-      history=[];saveHistory();renderHistory();previewSection.classList.add("hidden");
-    }
-  });
-
-  document.getElementById("navHistory").addEventListener("click",()=>document.getElementById("historySection").scrollIntoView({behavior:"smooth"}));
-  document.getElementById("navInfo").addEventListener("click",()=>alert("RHProject MIDI Converter\\n\\nMIDI diproses langsung di browser. Hasil RBXM berisi Model > ModuleScript > Source hasil convert."));
-
-  renderHistory();
-})();
-</script>
-</body>
-</html>
+      const hori
+Preview truncated for large file
