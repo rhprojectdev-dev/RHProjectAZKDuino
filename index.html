@@ -430,21 +430,29 @@ footer{color:#695478}
 }
 </style>
 
+
 <style id="midi-picker-fix">
-.pick-midi{
-  margin-top:12px;
-  border:1px solid #b449ef;
-  background:linear-gradient(90deg,#64139d,#8e20d5);
+.midi-picker{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:14px;
+  padding:12px 20px;
+  min-height:44px;
+  box-sizing:border-box;
+  border-radius:8px;
+  border:1px solid #b43cf0;
+  background:linear-gradient(135deg,#5b1390,#9b25dd);
   color:#fff;
-  border-radius:6px;
-  padding:10px 16px;
-  font-size:.68rem;
+  font-size:.75rem;
   font-weight:900;
-  letter-spacing:.3px;
-  box-shadow:0 5px 18px rgba(137,34,211,.22);
+  letter-spacing:.4px;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 7px 22px rgba(123,25,190,.25);
 }
-.pick-midi:hover{background:#a32bea;border-color:#d078ff}
-.pick-midi:active{transform:scale(.98)}
+.midi-picker:active{transform:scale(.98);filter:brightness(1.12)}
 </style>
 
 </head>
@@ -530,9 +538,9 @@ footer{color:#695478}
         <div class="drop" id="drop">
           <div class="drop-icon">♫</div>
           <div class="meter" id="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="big" id="dropText">Taro file .mid disini, atau pilih file (MAX 500)</div>
+          <div class="big" id="dropText">Taro file .mid disini, atau pilih file MIDI</div>
           <div class="small" id="dropFile">belum ada file dipilih</div>
-          <button type="button" class="pick-midi" id="btnPickMidi">📁 PILIH FILE MIDI</button>
+          <label class="midi-picker" for="fileInput">📁 PILIH FILE MIDI</label>
           <input type="file" id="fileInput" accept=".mid,.midi,audio/midi,audio/x-midi" multiple>
         </div>
         <div class="stats hidden" id="stats">
@@ -1084,14 +1092,5 @@ ${modules}
     try{
       ctx=getAudioContext();
       if(ctx.state!=="running")await ctx.resume();
-      if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browser");
-    }catch(e){
-      alert("Audio preview gagal dibuka: "+e.message);
-      return;
-    }
-
-    buildFxChain(ctx);
-    updateFxChain();
-
-    con
+      if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browse
 Preview truncated for large file
