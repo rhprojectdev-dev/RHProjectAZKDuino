@@ -432,29 +432,9 @@ footer{color:#695478}
 
 
 <style id="midi-picker-fix">
-.midi-picker{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin-top:14px;
-  padding:12px 20px;
-  min-height:44px;
-  box-sizing:border-box;
-  border-radius:8px;
-  border:1px solid #b43cf0;
-  background:linear-gradient(135deg,#5b1390,#9b25dd);
-  color:#fff;
-  font-size:.75rem;
-  font-weight:900;
-  letter-spacing:.4px;
-  cursor:pointer;
-  user-select:none;
-  -webkit-tap-highlight-color:transparent;
-  box-shadow:0 7px 22px rgba(123,25,190,.25);
-}
+.midi-picker{display:inline-flex;align-items:center;justify-content:center;margin-top:14px;padding:12px 20px;min-height:44px;box-sizing:border-box;border-radius:8px;border:1px solid #b43cf0;background:linear-gradient(135deg,#5b1390,#9b25dd);color:#fff;font-size:.75rem;font-weight:900;letter-spacing:.4px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 7px 22px rgba(123,25,190,.25)}
 .midi-picker:active{transform:scale(.98);filter:brightness(1.12)}
 </style>
-
 </head>
 <body>
 <div class="app">
@@ -538,7 +518,7 @@ footer{color:#695478}
         <div class="drop" id="drop">
           <div class="drop-icon">♫</div>
           <div class="meter" id="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="big" id="dropText">Taro file .mid disini, atau pilih file MIDI</div>
+          <div class="big" id="dropText">Taro file .mid disini, atau pilih file MIDI (MAX 500)</div>
           <div class="small" id="dropFile">belum ada file dipilih</div>
           <label class="midi-picker" for="fileInput">📁 PILIH FILE MIDI</label>
           <input type="file" id="fileInput" accept=".mid,.midi,audio/midi,audio/x-midi" multiple>
@@ -1092,5 +1072,7 @@ ${modules}
     try{
       ctx=getAudioContext();
       if(ctx.state!=="running")await ctx.resume();
-      if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browse
+      if(ctx.state!=="running")throw new Error("Audio belum diizinkan oleh browser");
+    }catch(e){
+      alert("Audio preview 
 Preview truncated for large file
