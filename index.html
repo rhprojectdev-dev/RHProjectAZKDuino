@@ -430,6 +430,23 @@ footer{color:#695478}
 }
 </style>
 
+<style id="midi-picker-fix">
+.pick-midi{
+  margin-top:12px;
+  border:1px solid #b449ef;
+  background:linear-gradient(90deg,#64139d,#8e20d5);
+  color:#fff;
+  border-radius:6px;
+  padding:10px 16px;
+  font-size:.68rem;
+  font-weight:900;
+  letter-spacing:.3px;
+  box-shadow:0 5px 18px rgba(137,34,211,.22);
+}
+.pick-midi:hover{background:#a32bea;border-color:#d078ff}
+.pick-midi:active{transform:scale(.98)}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -513,9 +530,10 @@ footer{color:#695478}
         <div class="drop" id="drop">
           <div class="drop-icon">♫</div>
           <div class="meter" id="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="big" id="dropText">Taro file .mid disini, atau klik buat pilih (MAX 500)</div>
+          <div class="big" id="dropText">Taro file .mid disini, atau pilih file (MAX 500)</div>
           <div class="small" id="dropFile">belum ada file dipilih</div>
-          <input type="file" id="fileInput" accept=".mid,.midi" multiple>
+          <button type="button" class="pick-midi" id="btnPickMidi">📁 PILIH FILE MIDI</button>
+          <input type="file" id="fileInput" accept=".mid,.midi,audio/midi,audio/x-midi" multiple>
         </div>
         <div class="stats hidden" id="stats">
           <div class="stat"><div class="n" id="statNotes">-</div><div class="l">Total Note</div></div>
@@ -1075,26 +1093,5 @@ ${modules}
     buildFxChain(ctx);
     updateFxChain();
 
-    const clean=notes
-      .map(n=>({
-        t:Number(n.t),
-        pitch:Number(n.pitch),
-        dur:Math.max(.035,Number(n.dur)||.035),
-        vel:Number(n.vel)||100
-      }))
-      .filter(n=>Number.isFinite(n.t)&&Number.isFinite(n.pitch)&&n.t>=0&&n.t<900);
-
-    if(!clean.length)return;
-
-    const run=previewRun;
-    const startAt=ctx.currentTime+.08;
-    startPianoRoll(clean,startAt);
-    const lookAhead=.20;
-    const every=.06;
-    let index=0;
-
-    const schedule=()=>{
-      if(run!==previewRun)return;
-
-      const hori
+    con
 Preview truncated for large file
