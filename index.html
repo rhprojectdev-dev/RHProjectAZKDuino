@@ -1029,54 +1029,38 @@ ${modules}
   function makeVoice(ctx,freq,start,end,wave,velocity){
     const chain=buildFxChain(ctx);
     const master=ctx.createGain();
-    const pianoFilter=ctx.createBiquadFilter();
     const body=ctx.createGain();
-    const attack=Math.min(.035,Math.max(.008,(end-start)*.08));
-    const release=Math.min(.22,Math.max(.07,(end-start)*.22));
-    const sustainStart=Math.min(end-release,start+attack);
+    const attack=Math.min(.025,Math.max(.006,(end-start)*.05));
+    // Sustain panjang: suara tidak langsung turun seperti piano.
+    // Release dibuat lebih panjang supaya ekor synth tetap terdengar.
+    const release=Math.min(.65,Math.max(.22,(end-start)*.35));
     const vel=Math.pow(Math.max(.05,Math.min(1,(velocity||100)/127)),0.72);
-    const vol=(.048+.052*vel)*(fx.volume/100);
+    const vol=(.055+.06*vel)*(fx.volume/100);
 
-    master.connect(pianoFilter);
-    pianoFilter.connect(body);
+    master.connect(body);
     body.connect(chain.input);
-
-    pianoFilter.type="lowpass";
-    const cutoff=wave==="supersaw"?Math.min(5200,1700+fx.timbre*32):Math.min(7000,2400+fx.timbre*40);
-    pianoFilter.frequency.setValueAtTime(cutoff,start);
-    pianoFilter.Q.setValueAtTime(.65+fx.focus/120,start);
 
     master.gain.setValueAtTime(.0001,start);
     master.gain.exponentialRampToValueAtTime(vol,start+attack);
-    master.gain.exponentialRampToValueAtTime(Math.max(.0001,vol*.68),sustainStart);
-    master.gain.setValueAtTime(Math.max(.0001,vol*.68),sustainStart);
-    master.gain.exponentialRampToValueAtTime(.0001,end);
+    master.gain.setValueAtTime(vol,Math.max(start+attack,end-release));
+    master.gain.setValueAtTime(vol*.82,Math.max(start+attack,end));
+    master.gain.exponentialRampToValueAtTime(.0001,end+release);
 
+    const detunes=wave==="supersaw"?[-11,-5.5,0,5.5,11]:[0];
     const nodes=[];
-    const detunes=wave==="supersaw"?[-10,-5,0,5,10]:[0];
-
-    detunes.forEach((det,i)=>{
+    detunes.forEach((det)=>{
       const o=ctx.createOscillator();
       const g=ctx.createGain();
       o.type=wave==="supersaw"?"sawtooth":wave;
       o.frequency.setValueAtTime(freq,start);
       o.detune.setValueAtTime(det,start);
-      g.gain.value=(wave==="supersaw"?0.25:0.82)/detunes.length;
+      g.gain.value=(wave==="supersaw"?.30:.88)/detunes.length;
       o.connect(g); g.connect(master);
-      o.start(start); o.stop(end+.035);
+      o.start(start); o.stop(end+release+.05);
       nodes.push(o,g);
     });
 
-    // A quiet sine fundamental makes the attack/decay feel more like a piano
-    // while preserving the selected synth waveform.
-    const fundamental=ctx.createOscillator();
-    const fg=ctx.createGain();
-    fundamental.type="sine";
-    fundamental.frequency.setValueAtTime(freq,start);
-    fg.gain.value=.14;
-    fundamental.connect(fg); fg.connect(master);
-    fundamental.start(start); fundamental.stop(end+.035);
-    nodes.push(fundamental,fg,master,pianoFilter,body);
+    nodes.push(master,body);
     return nodes;
   }
 
